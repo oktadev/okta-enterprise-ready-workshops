@@ -2,6 +2,7 @@ import express from 'express';
 import { PrismaClient, Todo, User } from '@prisma/client';
 import passportLocal from 'passport-local';
 import passportOIDC from 'passport-openidconnect';
+import passportBearer from 'passport-http-bearer';
 import passport from 'passport';
 import session from 'express-session';
 
@@ -12,6 +13,7 @@ interface IUser {
 const prisma = new PrismaClient();
 const LocalStrategy = passportLocal.Strategy;
 const OpenIDConnectStrategy = passportOIDC.Strategy;
+const BearerStrategy = passportBearer.Strategy;
 
 const app = express();
 app.use(express.json())
@@ -52,6 +54,18 @@ passport.use(new LocalStrategy(async (username, password, done) => {
     });
 
     return done(null, user);
+  }
+));
+
+passport.use(new BearerStrategy(
+  async (apikey, done) => {
+    const org = await prisma.org.findFirst({
+      where: {
+        apikey: apikey
+      }
+    });
+
+    return done(null, org);
   }
 ));
 
@@ -143,6 +157,17 @@ app.delete('/api/todos/:id', async (req, res) => {
   });
 
   res.sendStatus(204);
+});
+
+app.get('/api/org/todos',
+  passport.authenticate('bearer'),
+  async (req, res) => {
+    const todos = await prisma.todo.findMany({
+      where: {
+        orgId: req.user['id']
+      }
+    });
+    res.json({todos});
 });
 
 const port = process.env.PORT || 3333;
