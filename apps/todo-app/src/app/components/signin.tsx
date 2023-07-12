@@ -6,11 +6,25 @@ export const Signin = () => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
-  const { onAuthenticateFn } = useAuthState();
+  const { onAuthenticateFn, onUsernameEnteredFn } = useAuthState();
   const navigate = useNavigate();
 
   const onAuthenticate = async () => { 
     const signIn = async () => {
+     // When the user enters just their email, but no password, look up the email to see if it belongs to an org
+     if (username && !password) {
+      const org_id = await onUsernameEnteredFn(username);
+      if(org_id) {
+        // If the backend returns an org ID, redirect to start the SSO process
+        window.location.assign(`http://localhost:3333/openid/start/${org_id}`);
+        return;
+      } else {
+        // Otherwise, show the password form
+        document.getElementById("password-field")?.removeAttribute("hidden");
+        return;
+      }
+    }
+
       if (username && password) {
         await onAuthenticateFn(username, password);
       }
@@ -40,7 +54,7 @@ export const Signin = () => {
           />
         </div>
         
-        <div className="mb-6">
+        <div id="password-field" className="mb-6" hidden>
           <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
             Password
           </label>
@@ -49,7 +63,6 @@ export const Signin = () => {
             name="email"
             type="password"
             autoComplete="current-password"
-            required
             className="w-full text-slate-900 placeholder-slate-400 rounded-md py-2 pl-2 ring-1 ring-slate-200"
             value={password}
             onChange={(event) => setPassword(event.currentTarget.value)}
@@ -58,7 +71,7 @@ export const Signin = () => {
         <button 
             className="w-full py-2 px-3 bg-slate-300 rounded-md"
             onClick={onAuthenticate}
-            disabled = {!username || !password}
+            disabled = {!username}
           >
             Sign in
           </button>
