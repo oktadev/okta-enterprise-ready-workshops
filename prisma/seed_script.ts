@@ -3,23 +3,39 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  const bobbyUser= await prisma.user.create({
+  const org = await prisma.org.create({
     data: {
-      name: 'Bobby Tables',
-      email: 'bob@tables.fake',
-      password: 'correct horse battery staple'
+      domain: 'portal.example',
+      apikey: '131313'
+    }
+  });
+  console.log('Created org Portal', org);
+  
+  const somnusUser= await prisma.user.create({
+    data: {
+      name: 'Somnus',
+      email: 'somnus@portal.example',
+      password: 'correct horse battery staple',
+      orgId: org.id,
+      externalId: '22',
+      active: true
     },
   })
-  console.log('Created user Bobby Tables', bobbyUser)
+  console.log('Created user Somnus', somnusUser)
+  
 
-  const trinityUser = await prisma.user.create({
+ const trinityUser= await prisma.user.create({
     data: {
       name: 'Trinity',
-      email: 'trinity@whiterabbit.fake',
-      password: 'Zion'
+      email: 'trinity@portal.example',
+      password: 'Zion',
+      orgId: org.id,
+      externalId: '23',
+      active: true
     },
   })
   console.log('Created user Trinity', trinityUser)
+      
 }
 
 main()

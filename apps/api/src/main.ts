@@ -4,6 +4,18 @@ import passportLocal from 'passport-local';
 import passportOIDC from 'passport-openidconnect';
 import passport from 'passport';
 import session from 'express-session';
+import passportBearer from 'passport-http-bearer';
+
+// body-parser is required to accept the header content-type application/scim+json from Okta
+// https://www.npmjs.com/package/body-parser
+// RFC Notes: https://datatracker.ietf.org/doc/html/rfc7644#section-3.1
+import bodyParser from 'body-parser';
+
+// For logging http requests
+import morgan from 'morgan';
+
+// Import the scimRoute from the scim.ts file
+import { scimRoute } from './scim';
 
 interface IUser {
   id: number;
@@ -12,6 +24,7 @@ interface IUser {
 const prisma = new PrismaClient();
 const LocalStrategy = passportLocal.Strategy;
 const OpenIDConnectStrategy = passportOIDC.Strategy;
+const BearerStrategy = passportBearer.Strategy;
 
 const app = express();
 app.use(express.json())
@@ -143,6 +156,30 @@ app.delete('/api/todos/:id', async (req, res) => {
 
   res.sendStatus(204);
 });
+
+///////////////////////////////////////////////////////
+// SCIM-related routes
+
+passport.use(new BearerStrategy(
+  async (apikey, done) => {
+    const org = await prisma.org.findFirst({
+      where: {
+        apikey: apikey
+      }
+    });
+
+    return done(null, org);
+  }
+));
+ 
+app.use(bodyParser.json({ type: 'application/scim+json' }));
+
+// https://github.com/expressjs/morgan
+app.use(morgan('combined'))
+
+// '/scim/v2' path appends to every SCIM Endpoints 
+// Okta recommended url - https://developer.okta.com/docs/guides/scim-provisioning-integration-prepare/main/#base-url
+app.use('/scim/v2', scimRoute);
 
 const port = process.env.PORT || 3333;
 const server = app.listen(port, () => {
