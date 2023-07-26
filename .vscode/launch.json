@@ -1,0 +1,11 @@
+{
+    "configurations": [
+
+        {
+            "name": "Debug Node App",
+            "type": "node",
+            "request": "attach",
+            "port": 3333
+        },
+    ]
+}
