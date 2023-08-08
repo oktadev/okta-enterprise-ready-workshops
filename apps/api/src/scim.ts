@@ -65,7 +65,8 @@ scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
     // Set displayName to name 
     const name = displayName;
   
-    // Check if the User exists in the database 
+    // Check if the User exists in the database
+    // externalId + orgId = user uniqueness per SCIM RFC Section 3.3 
     const duplicateUser = await prisma.user.findFirst({
         select: {
           id: true,
@@ -73,7 +74,7 @@ scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
           name: true,
         },
         where: {
-          email,
+          externalId,
           org: {id: ORG_ID}
         }
       });
