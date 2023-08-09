@@ -15,13 +15,15 @@ export type AuthContextType = {
   userIsAuthenticatedFn: () => Promise<void>;
   onAuthenticateFn: (username: string, password: string) => Promise<void>;
   onRevokeAuthFn: () => Promise<void>;
+  onUsernameEnteredFn: (username: string) => Promise<number|null>;
 }
 
 const defaultAuthContext: AuthContextType = {
   authState: defaultAuthState,
   userIsAuthenticatedFn: async () => {},
   onAuthenticateFn: async () => {},
-  onRevokeAuthFn: async () => {}
+  onRevokeAuthFn: async () => {},
+  onUsernameEnteredFn: async () => null,
 }
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
@@ -55,6 +57,27 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
         console.error(error);
       }
   }, [setAuthState]);
+
+  const onUsernameEnteredFn = async (username: string) => {
+    const url = `/api/openid/check`;
+    try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username })
+        });
+
+        const {org_id} = await res.json();
+
+        return org_id;
+      } catch (error: unknown) {
+        console.error(error);
+      }
+
+    return null;
+  }
 
   const onAuthenticateFn = async (username: string, password: string) => { 
     const url = `/api/signin`;
@@ -90,7 +113,7 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
     }
   }
 
-  return <AuthContext.Provider value={{ authState, onAuthenticateFn, onRevokeAuthFn, userIsAuthenticatedFn }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ authState, onAuthenticateFn, onUsernameEnteredFn, onRevokeAuthFn, userIsAuthenticatedFn }}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContextProvider;
