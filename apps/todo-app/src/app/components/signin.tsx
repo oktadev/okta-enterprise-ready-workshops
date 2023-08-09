@@ -6,21 +6,11 @@ export const Signin = () => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
-  const { onAuthenticateFn, onUsernameEnteredFn } = useAuthState();
+  const { onAuthenticateFn } = useAuthState();
   const navigate = useNavigate();
 
   const onAuthenticate = async () => { 
     const signIn = async () => {
-      if (username && !password) {
-        const org_id = await onUsernameEnteredFn(username);
-        if(org_id) {
-          window.location.assign(`http://localhost:3333/openid/start/${org_id}`)
-          return;
-        } else {
-          document.getElementById('password-field')?.removeAttribute('hidden');
-          return;
-        }
-      }
       if (username && password) {
         await onAuthenticateFn(username, password);
       }
@@ -50,7 +40,7 @@ export const Signin = () => {
           />
         </div>
         
-        <div id="password-field" className="mb-6" hidden>
+        <div className="mb-6">
           <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
             Password
           </label>
@@ -68,7 +58,7 @@ export const Signin = () => {
         <button 
             className="w-full py-2 px-3 bg-slate-300 rounded-md"
             onClick={onAuthenticate}
-            disabled = {!username}
+            disabled = {!username || !password}
           >
             Sign in
           </button>
