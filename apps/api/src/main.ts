@@ -124,7 +124,8 @@ app.post('/api/todos', async (req, res) => {
     data: {
       task,
       completed: false,
-      user : { connect: {id}}
+      user: { connect: {id}},
+      org: { connect: {id: req.user['orgId']}}
     }
   })
 
