@@ -14,7 +14,6 @@ export type AuthContextType = {
   authState: AuthState;
   userIsAuthenticatedFn: () => Promise<void>;
   onAuthenticateFn: (username: string, password: string) => Promise<void>;
-  onUsernameEnteredFn: (username: string) => Promise<number|null>;
   onRevokeAuthFn: () => Promise<void>;
 }
 
@@ -22,7 +21,6 @@ const defaultAuthContext: AuthContextType = {
   authState: defaultAuthState,
   userIsAuthenticatedFn: async () => {},
   onAuthenticateFn: async () => {},
-  onUsernameEnteredFn: async () => null,
   onRevokeAuthFn: async () => {}
 }
 
@@ -78,27 +76,6 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
       }
   }
 
-  const onUsernameEnteredFn = async (username: string) => {
-    const url = `/api/openid/check`;
-    try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ username })
-        });
-
-        const {org_id} = await res.json();
-
-        return org_id;
-      } catch (error: unknown) {
-        console.error(error);
-      }
-
-    return null;
-  }
-
   const onRevokeAuthFn = async () => {
     const url = `/api/signout`;
     try {
@@ -113,7 +90,7 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
     }
   }
 
-  return <AuthContext.Provider value={{ authState, onAuthenticateFn, onUsernameEnteredFn, onRevokeAuthFn, userIsAuthenticatedFn }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ authState, onAuthenticateFn, onRevokeAuthFn, userIsAuthenticatedFn }}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContextProvider;

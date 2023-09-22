@@ -36,13 +36,7 @@ model User {
 
 model Org {
   id        Int     @id @default(autoincrement())
-  domain    String  @unique
-  issuer                 String @default("")
-  authorization_endpoint String @default("")
-  token_endpoint         String @default("")
-  userinfo_endpoint      String @default("")
-  client_id              String @default("")
-  client_secret          String @default("")
+  auth0ConnectionName    String  @unique
   apikey                 String
   Todo     Todo[]
   User     User[]
