@@ -142,40 +142,42 @@ const passportStrategy = new OpenIDConnectStrategy({
     scope: 'profile email',
     callbackURL: 'http://localhost:3333/openid/callback'
   },
-  async function verify(issuer, profile, cb) {
+  async function verify(issuer, profile, idProfile, context, idToken, accessToken, refreshToken, params, cb) {
 
     // Passport.js runs this verify function after successfully completing
     // the OIDC flow, and gives this app a chance to do something with
     // the response from the OIDC server, like create users on the fly.
 
     console.log(profile);
+    const connection = profile._json['https://example.com/connection']
+
+    var org = await prisma.org.findFirst({
+      where: {
+        auth0ConnectionName: connection.id,
+      }
+    })
+    if(!org) {
+      org = await prisma.org.create({
+        data: {
+          auth0ConnectionName: connection.id,
+          name: connection.name,
+          apikey: "",
+        }
+      })
+    }
+
 
     var user = await prisma.user.findFirst({
       where: {
-        orgId: 1,
+        orgId: org.id,
         externalId: profile.id,
       }
     })
 
     if(!user) {
-      user = await prisma.user.findFirst({
-        where: {
-          orgId: 1,
-          email: profile.emails[0].value,
-        }
-      })
-      if(user) {
-        await prisma.user.update({
-          where: {id: user.id},
-          data: {externalId: profile.id}
-        })
-      }
-    }
-
-    if(!user) {
       user = await prisma.user.create({
         data: {
-          org: {connect: {id: 1}},
+          org: {connect: {id: org.id}},
           externalId: profile.id,
           email: profile.emails[0].value,
           name: profile.displayName,

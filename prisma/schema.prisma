@@ -37,6 +37,7 @@ model User {
 model Org {
   id        Int     @id @default(autoincrement())
   auth0ConnectionName    String  @unique
+  name     String
   apikey                 String
   Todo     Todo[]
   User     User[]
