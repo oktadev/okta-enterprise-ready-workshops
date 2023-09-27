@@ -11,7 +11,8 @@
     "prisma": "prisma",
     "start": "nx run-many --target=serve --all",
     "init-db": "prisma generate && prisma db push && npx ts-node prisma/seed_script.ts",
-    "serve-api": "nx run api:serve"
+    "serve-api": "nx run api:serve",
+    "oidc-migrate": "npx ts-node prisma/oidc_script.ts"
   },
   "private": true,
   "devDependencies": {
@@ -67,6 +68,7 @@
     "express-session": "^1.17.3",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
+    "passport-openidconnect": "^0.1.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "6.8.1",
