@@ -151,25 +151,25 @@ const passportStrategy = new OpenIDConnectStrategy({
     console.log(profile);
     const connection = profile._json['https://example.com/connection']
 
-    var org = await prisma.org.findFirst({
-      where: {
-        auth0ConnectionName: connection.id,
-      }
-    })
-    if(!org) {
-      org = await prisma.org.create({
-        data: {
-          auth0ConnectionName: connection.id,
-          name: connection.name,
-          apikey: "",
-        }
-      })
-    }
+    // var org = await prisma.org.findFirst({
+    //   where: {
+    //     auth0ConnectionName: connection.id,
+    //   }
+    // })
+    // if(!org) {
+    //   org = await prisma.org.create({
+    //     data: {
+    //       auth0ConnectionName: connection.id,
+    //       name: connection.name,
+    //       apikey: "",
+    //     }
+    //   })
+    // }
 
 
     var user = await prisma.user.findFirst({
       where: {
-        orgId: org.id,
+        // orgId: org.id,
         externalId: profile.id,
       }
     })
@@ -177,7 +177,7 @@ const passportStrategy = new OpenIDConnectStrategy({
     if(!user) {
       user = await prisma.user.create({
         data: {
-          org: {connect: {id: org.id}},
+          // org: {connect: {id: org.id}},
           externalId: profile.id,
           email: profile.emails[0].value,
           name: profile.displayName,
