@@ -44,91 +44,7 @@ const defaultUserSchema: IUserSchema = {
 // POST /scim/v2/Users
 // RFC Notes on Creating Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.3
 scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
-    // console.log('POST: /Users');
-  
-    // Format to SCIM standard 
-    const newUser: IUserSchema = req.body;
-    console.log(req.body)
-    const { emails, password} = newUser;
-    const externalId = newUser.externalId;
-    const active = newUser.active;
-    const givenName = newUser.name?.givenName ?? 'NAME';
-    const familyName = newUser.name?.familyName ?? 'MISSING';
-  
-    const displayName = `${givenName} ${familyName}`;
-  
-    // Pull out primary email address 
-    const emailPrimary = emails.find(email => email.primary === true);
-    const email = emailPrimary.value;
-    console.log('email: ', email);
-  
-    // Set displayName to name 
-    const name = displayName;
-  
-    // Check if the User exists in the database
-    // externalId + orgId = user uniqueness per SCIM RFC Section 3.3 
-    const duplicateUser = await prisma.user.findFirst({
-        select: {
-          id: true,
-          email: true,
-          name: true,
-        },
-        where: {
-          externalId,
-          org: {id: ORG_ID}
-        }
-      });
-  
-    let userResponse: IUserSchema;
-    let httpStatus = 201;
-  
-    // If there is any records returned, then we have a duplicate  
-    if ( duplicateUser) {
-      // User Found... Error
-      console.log('Account Exist ID: ', duplicateUser.id);
-  
-      userResponse = {
-        schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
-        detail: 'User already exists in the database: ' + duplicateUser.id,
-        status: 409
-      };
-      httpStatus = 409;
-  
-      // res.status(200).send(userResponse);
-    } else { // If we don't find one Create... 
-      // Create the User in the database 
-      const user = await prisma.user.create({
-        data: {
-          org : { connect: {id: ORG_ID}},
-          name,
-          email,
-          password,
-          externalId,
-          active
-        }
-      });
-  
-      console.log('Account Created ID: ', user.id);
-  
-      userResponse = { ...defaultUserSchema, 
-        id: `${user.id}`,
-        userName: user.email,
-        name: {
-          givenName,
-          familyName
-        },
-        emails: [{
-          primary: true,
-          value: user.email,
-          type: "work"
-        }],
-        displayName: name,
-        externalId: user.externalId, 
-        active: user.active 
-      };
-    }
-  
-      res.status(httpStatus).json(userResponse);
+    // Your Code Here
   });
 
 
@@ -374,17 +290,5 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
 // RFC Notes on Partial Update: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2 
 // Note: this does not a true "delete", this will update the active flag to false (this is an Okta best practice)
 scimRoute.patch('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-    // console.log('PATCH: /Users/:userId'); 
-    console.log(req.body);
-  
-     const id  = parseInt(req.params.userId);
-     const active = req.body["Operations"][0]["value"]["active"]
-     await prisma.user.update({
-       data: {
-        active
-       },
-       where: { id }
-     });
-  
-     res.sendStatus(204);
+    // Your Code Here
    });   
