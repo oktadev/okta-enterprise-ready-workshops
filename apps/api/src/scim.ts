@@ -146,15 +146,13 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
   
     usersResponse.itemsPerPage = usersResponse.Resources.length
     res.json(usersResponse);
-  
-    console.log(usersResponse)
   });
 
 // Retrieve a specific User by ID
 // GET /scim/v2/Users/{userId}
 // RFC Notes on Retrieving Users by ID: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.1
 scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, res) => {
-    console.log('GET: /users/:userId'); 
+    // console.log('GET: /users/:userId'); 
   
     const id = parseInt(req.params.userId);
     const user = await prisma.user.findFirst({
@@ -203,7 +201,6 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
   
     // Send Response
     res.status(httpStatus).json(userResponse);
-    console.log(userResponse);
   });  
 
   // Update a specific User (PUT)
@@ -211,9 +208,8 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
   // RFC Notes on Updating a User: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.1
   scimRoute.put('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
     // console.log('PUT: /users/:userId'); 
-    console.log(req.body);
+    // console.log(req.body);
 
-    
     const id = parseInt(req.params.userId);
      const userCount = await prisma.user.count({
        where: {
@@ -290,5 +286,17 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
 // RFC Notes on Partial Update: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2 
 // Note: this does not a true "delete", this will update the active flag to false (this is an Okta best practice)
 scimRoute.patch('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-    // Your Code Here
+    // console.log('PATCH: /Users/:userId'); 
+    // console.log(req.body);
+  
+     const id  = parseInt(req.params.userId);
+     const active = req.body["Operations"][0]["value"]["active"]
+     await prisma.user.update({
+       data: {
+        active
+       },
+       where: { id }
+     });
+  
+     res.sendStatus(204);
    });   
