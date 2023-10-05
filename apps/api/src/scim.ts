@@ -6,7 +6,6 @@ import passport from 'passport';
 
 const prisma = new PrismaClient();
 
-// To funnel users into their designated orgs
 const ORG_ID = 1;
  
 interface IUserSchema {
@@ -40,39 +39,25 @@ const defaultUserSchema: IUserSchema = {
     }
   };
 
-// Create User Function
-// POST /scim/v2/Users
-// RFC Notes on Creating Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.3
+
 scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
     // Your Code Here
   });
 
 
-// Retrieve Users 
-// GET /scim/v2/Users
-// RFC Notes on Retrieving Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.1
 scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
-
-    // console.log('GET: /Users'); 
-    // console.log(req.query.filter)
-  
-    // RFC Notes on Pagination: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.2.4
     const DEFAULT_START_INDEX = '1';
     const DEFAULT_RECORD_LIMIT = '100';
     let startIndex = parseInt(req.query.startIndex as string ?? DEFAULT_START_INDEX);
-    startIndex--; // Prisma starts its indexing at 0, while Okta send starting index at 1, this is to make sure we start at 0 
+    startIndex--; 
     const recordLimit = parseInt(req.query.recordLimit as string ?? DEFAULT_RECORD_LIMIT);
     let filterQuery : string|null = req.query.filter as string ?? null;
     let filterParams: string[] = [];
     let email = null;
   
     if (!!filterQuery) {
-      // Get query string for filter that has operators eq
-      // ?filter=userName%20eq%20%22bob%40tables.fake%22
       filterParams = filterQuery.split(' ');
   
-  
-      // RFC Notes on Filtering: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.2.2
       const FILTER_EXPRESSION_LENGTH = 3;
       const FILTER_ATTRIBUTE_NAME = 0;
       const FILTER_OPERATOR = 1;
@@ -82,9 +67,7 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
         filterParams = [];
         filterQuery = null;
       } else {
-        // Email string is wrapped in "", remove the double quotes 
         email = filterParams[FILTER_VALUE].replaceAll('"', '')
-        console.log('Filter Detected: userName EQ ', email);
       }
     }
   
@@ -148,11 +131,7 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
     res.json(usersResponse);
   });
 
-// Retrieve a specific User by ID
-// GET /scim/v2/Users/{userId}
-// RFC Notes on Retrieving Users by ID: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.1
-scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, res) => {
-    // console.log('GET: /users/:userId'); 
+scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, res) => { 
   
     const id = parseInt(req.params.userId);
     const user = await prisma.user.findFirst({
@@ -172,7 +151,6 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
     let httpStatus = 200;
     let userResponse;
   
-    // If no response from DB, return 404
     if (!!user) {
       const { id, name, email } = user;
       const [givenName, familyName] = name.split(" ")
@@ -199,17 +177,11 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
       userResponse = `User ${id} not found`;
     };
   
-    // Send Response
     res.status(httpStatus).json(userResponse);
   });  
 
-  // Update a specific User (PUT)
-  // PUT /scim/v2/Users/{userId}
-  // RFC Notes on Updating a User: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.1
-  scimRoute.put('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-    // console.log('PUT: /users/:userId'); 
-    // console.log(req.body);
 
+  scimRoute.put('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
     const id = parseInt(req.params.userId);
      const userCount = await prisma.user.count({
        where: {
@@ -266,13 +238,7 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
     res.status(httpStatus).send(userResponse);
   });  
 
-  // Delete Users
-// DELETE: /Users/:userId
-// RFC Notes on Deleting Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.6 
  scimRoute.delete('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-    // console.log('DELETE: /Users/:userId'); 
-    // console.log(req.body);
-  
      const id  = parseInt(req.params.userId);
      await prisma.user.delete({
        where: { id }
@@ -281,14 +247,7 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
      res.sendStatus(204);
    });
 
-// Soft Delete Users
-// PATCH: /Users/:userId
-// RFC Notes on Partial Update: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2 
-// Note: this does not a true "delete", this will update the active flag to false (this is an Okta best practice)
 scimRoute.patch('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-    // console.log('PATCH: /Users/:userId'); 
-    // console.log(req.body);
-  
      const id  = parseInt(req.params.userId);
      const active = req.body["Operations"][0]["value"]["active"]
      await prisma.user.update({
