@@ -39,13 +39,19 @@ const defaultUserSchema: IUserSchema = {
     }
   };
 
-
+// Create User Function
+// POST /scim/v2/Users
+// RFC Notes on Creating Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.3
 scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
     // Your Code Here
   });
 
-
+// Retrieve Users 
+// GET /scim/v2/Users
+// RFC Notes on Retrieving Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.1
 scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
+    
+    // RFC Notes on Pagination: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.2.4
     const DEFAULT_START_INDEX = '1';
     const DEFAULT_RECORD_LIMIT = '100';
     let startIndex = parseInt(req.query.startIndex as string ?? DEFAULT_START_INDEX);
@@ -54,10 +60,12 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
     let filterQuery : string|null = req.query.filter as string ?? null;
     let filterParams: string[] = [];
     let email = null;
-  
+
+    
     if (!!filterQuery) {
       filterParams = filterQuery.split(' ');
-  
+
+      // RFC Notes on Filtering: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.2.2
       const FILTER_EXPRESSION_LENGTH = 3;
       const FILTER_ATTRIBUTE_NAME = 0;
       const FILTER_OPERATOR = 1;
@@ -131,6 +139,9 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
     res.json(usersResponse);
   });
 
+// Retrieve a specific User by ID
+// GET /scim/v2/Users/{userId}
+// RFC Notes on Retrieving Users by ID: https://www.rfc-editor.org/rfc/rfc7644#section-3.4.1
 scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, res) => { 
   
     const id = parseInt(req.params.userId);
@@ -180,73 +191,82 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
     res.status(httpStatus).json(userResponse);
   });  
 
-
-  scimRoute.put('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-    const id = parseInt(req.params.userId);
-     const userCount = await prisma.user.count({
-       where: {
-          id,
-          org: { id: ORG_ID },
-         }
-     });
-  
-     let userResponse;
-     let httpStatus = 200;
-  
-     if (userCount === 1) {
-      const updatedUserRequest: IUserSchema = req.body;
-      const { name, emails } = updatedUserRequest; 
-
-      const updatedUser = await prisma.user.update({
-       data: {
-         email: emails.find(email => email.primary).value,
-         name: `${name.givenName} ${name.familyName}` 
-       },
-       where : {
-         id 
+// Update a specific User (PUT)
+// PUT /scim/v2/Users/{userId}
+// RFC Notes on Updating a User: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.1
+scimRoute.put('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
+   const id = parseInt(req.params.userId);
+   const userCount = await prisma.user.count({
+     where: {
+        id,
+        org: { id: ORG_ID },
        }
-      });
-      
-      const [givenName, familyName] = updatedUser.name.split(" ")
-
-      userResponse = {
-        ...defaultUserSchema,
-        id: id.toString(),
-        userName: updatedUser.email,
-        name: {
-          givenName,
-          familyName
-        },
-        emails: [{
-          primary: true,
-          value: updatedUser.email,
-          type: 'work'
-        }],
-        displayName: updatedUser.name,
-        externalId: updatedUser.externalId, 
-        active: updatedUser.active
-      } satisfies IUserSchema;
-     } else if (userCount === 0) {
-      httpStatus = 404;
-      userResponse = `User ${id} not found`;
-     } else {
-      
-      httpStatus = 500;
-      userResponse = `Whoa there!`;
-    }
-  
-    res.status(httpStatus).send(userResponse);
-  });  
-
- scimRoute.delete('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
-     const id  = parseInt(req.params.userId);
-     await prisma.user.delete({
-       where: { id }
-     });
-  
-     res.sendStatus(204);
    });
 
+   let userResponse;
+   let httpStatus = 200;
+
+   if (userCount === 1) {
+    const updatedUserRequest: IUserSchema = req.body;
+    const { name, emails } = updatedUserRequest; 
+
+    const updatedUser = await prisma.user.update({
+     data: {
+       email: emails.find(email => email.primary).value,
+       name: `${name.givenName} ${name.familyName}` 
+     },
+     where : {
+       id 
+     }
+    });
+    
+    const [givenName, familyName] = updatedUser.name.split(" ")
+
+    userResponse = {
+      ...defaultUserSchema,
+      id: id.toString(),
+      userName: updatedUser.email,
+      name: {
+        givenName,
+        familyName
+      },
+      emails: [{
+        primary: true,
+        value: updatedUser.email,
+        type: 'work'
+      }],
+      displayName: updatedUser.name,
+      externalId: updatedUser.externalId, 
+      active: updatedUser.active
+    } satisfies IUserSchema;
+   } else if (userCount === 0) {
+    httpStatus = 404;
+    userResponse = `User ${id} not found`;
+   } else {
+    
+    httpStatus = 500;
+    userResponse = `Whoa there!`;
+  }
+
+  res.status(httpStatus).send(userResponse);
+});  
+
+// Delete Users
+// DELETE: /Users/:userId
+// RFC Notes on Deleting Users: https://www.rfc-editor.org/rfc/rfc7644#section-3.6 
+scimRoute.delete('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
+   const id  = parseInt(req.params.userId);
+   await prisma.user.delete({
+     where: { id }
+   });
+
+   res.sendStatus(204);
+ });
+
+// Soft Delete Users
+// PATCH: /Users/:userId
+// RFC Notes on Partial Update: https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2 
+// Note: this does not a true "delete", this will update the active flag to false (this is an Okta best practice)
 scimRoute.patch('/Users/:userId', passport.authenticate('bearer'), async (req, res) => {
      const id  = parseInt(req.params.userId);
      const active = req.body["Operations"][0]["value"]["active"]
