@@ -1,17 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuthState } from './authState';
 import { useEffect, useState } from 'react';
+import { useTodoApi } from './useTodoApi'
 
 export const Profile = () => {
 
   const { authState } = useAuthState();
   const [user, setUser] = useState<object>({});
   const navigate = useNavigate();
+  const todoApi = useTodoApi();
 
   useEffect(() => {
     const getUserProfile = async () => {
       try {
-        const response = await fetch('/api/users/me', {
+        const response = await todoApi('/api/users/me', {
           credentials: 'same-origin',
           mode: 'same-origin'
       });
