@@ -14,16 +14,18 @@ export type AuthContextType = {
   authState: AuthState;
   userIsAuthenticatedFn: () => Promise<void>;
   onAuthenticateFn: (username: string, password: string) => Promise<void>;
-  onUsernameEnteredFn: (username: string) => Promise<number|null>;
+  onUsernameEnteredFn: (username: string) => Promise<number | null>;
   onRevokeAuthFn: () => Promise<void>;
+  resetAuthState: () => void;
 }
 
 const defaultAuthContext: AuthContextType = {
   authState: defaultAuthState,
-  userIsAuthenticatedFn: async () => {},
-  onAuthenticateFn: async () => {},
+  userIsAuthenticatedFn: async () => { },
+  onAuthenticateFn: async () => { },
   onUsernameEnteredFn: async () => null,
-  onRevokeAuthFn: async () => {}
+  onRevokeAuthFn: async () => { },
+  resetAuthState: () => { }
 }
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
@@ -36,65 +38,66 @@ type Props = {
 const AuthContextProvider: React.FC<Props> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>(defaultAuthState);
 
+
   const userIsAuthenticatedFn = useCallback(async () => {
     const url = `/api/users/me`;
-      try {
-        const res = await fetch(url, {
-            credentials: 'same-origin',
-            mode: 'same-origin'
-        });
+    try {
+      const res = await fetch(url, {
+        credentials: 'same-origin',
+        mode: 'same-origin'
+      });
 
-        if (res.status === 200) {
-          const {name} = await res.json();
-          setAuthState({name, isAuthenticated: true});
-          localStorage.setItem('isAuthenticated', 'true');
-        } else {
-          setAuthState(defaultAuthState);
-          localStorage.setItem('isAuthenticated', 'false');
-        }
-      } catch (error: unknown) {
+      if (res.status === 200) {
+        const { name } = await res.json();
+        setAuthState({ name, isAuthenticated: true });
+        localStorage.setItem('isAuthenticated', 'true');
+      } else {
         setAuthState(defaultAuthState);
-        console.error(error);
+        localStorage.setItem('isAuthenticated', 'false');
       }
+    } catch (error: unknown) {
+      setAuthState(defaultAuthState);
+      console.error(error);
+    }
   }, [setAuthState]);
 
-  const onAuthenticateFn = async (username: string, password: string) => { 
+  const onAuthenticateFn = async (username: string, password: string) => {
     const url = `/api/signin`;
     try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ username, password })
-        });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
 
-        const {name} = await res.json();
+      const { name } = await res.json();
 
-        setAuthState({name, isAuthenticated: true})
-        localStorage.setItem('isAuthenticated', 'true');
-      } catch (error: unknown) {
-        console.error(error);
-      }
+      setAuthState({ name, isAuthenticated: true })
+      localStorage.setItem('isAuthenticated', 'true');
+    } catch (error: unknown) {
+      console.error(error);
+    }
   }
 
   const onUsernameEnteredFn = async (username: string) => {
     const url = `/api/openid/check`;
     try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ username })
-        });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username })
+      });
 
-        const {org_id} = await res.json();
+      const { org_id } = await res.json();
 
-        return org_id;
-      } catch (error: unknown) {
-        console.error(error);
-      }
+      return org_id;
+    } catch (error: unknown) {
+      console.error(error);
+    }
 
     return null;
   }
@@ -102,18 +105,22 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
   const onRevokeAuthFn = async () => {
     const url = `/api/signout`;
     try {
-        const res = await fetch(url, {
-          method: 'POST'
-        });
-        
-        setAuthState(defaultAuthState);
-        localStorage.setItem('isAuthenticated', 'false');
-      } catch (error: unknown) {
-        console.error(error);
+      const res = await fetch(url, {
+        method: 'POST'
+      });
+
+      resetAuthState()
+    } catch (error: unknown) {
+      console.error(error);
     }
   }
 
-  return <AuthContext.Provider value={{ authState, onAuthenticateFn, onUsernameEnteredFn, onRevokeAuthFn, userIsAuthenticatedFn }}>{children}</AuthContext.Provider>;
+  const resetAuthState = () => {
+    setAuthState(defaultAuthState);
+    localStorage.setItem('isAuthenticated', 'false');
+  }
+
+  return <AuthContext.Provider value={{ authState, onAuthenticateFn, onUsernameEnteredFn, onRevokeAuthFn, userIsAuthenticatedFn, resetAuthState }}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContextProvider;
