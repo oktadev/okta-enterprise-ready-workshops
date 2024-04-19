@@ -10,7 +10,7 @@ import morgan from 'morgan';
 // Bearer Auth - Universal Logout
 import passportBearer from 'passport-http-bearer';
 import { store } from './sessionsStore';
-import OktaJwtVerifier from '@okta/jwt-verifier';
+
 
 interface IUser {
   id: number;
@@ -321,46 +321,8 @@ passport.use(
   })
 );
 
-const oktaJwtVerifier = new OktaJwtVerifier({
-  issuer: 'https://whiterabbit.clouditude.com',
-  jwksUri: 'https://whiterabbit.clouditude.com/oauth2/v1/keys',
-});
-
-const tokenValidator = async function (req, res, next) {
-  const authHeaders = req.headers.authorization;
-  if (!authHeaders) {
-    return res.sendStatus(401);
-  }
-  const parts = authHeaders.split(' ');
-
-  const jwt = parts[1];
-  const expectedAud =
-    'https://empty-hornets-sing.loca.lt/global-token-revocation';
-
-  try {
-    const verifiedJwt = await oktaJwtVerifier.verifyAccessToken(
-      jwt,
-      expectedAud
-    );
-    console.log(verifiedJwt.claims);
-  } catch (err) {
-    console.log(err);
-    return res.sendStatus(401);
-  }
-
-  const issuer = jwt.iss;
-  const org = await prisma.org.findFirst({
-    where: {
-      issuer: issuer,
-    },
-  });
-
-  console.log(org);
-  req.org = org;
-
-  next();
-};
 
 app.use(morgan('combined'));
-//app.use('/', passport.authenticate('bearer', { session: false }), universalLogoutRoute);
-app.use('/', tokenValidator, universalLogoutRoute);
+
+app.use('/', passport.authenticate('bearer', { session: false }), universalLogoutRoute);
+
