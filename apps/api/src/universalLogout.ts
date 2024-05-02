@@ -18,11 +18,6 @@ universalLogoutRoute.post('/global-token-revocation', async (req, res) => {
   if (!req.body) {
     res.status(400);
   }
-  
-  const authHeaders = req.headers.authorization
-  if(!authHeaders){
-    return res.sendStatus(401)
-  }
 
   // Target a user within a specific org
   const domainOrgId = req['user']['id']
