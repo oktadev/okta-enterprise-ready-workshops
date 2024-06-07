@@ -12,7 +12,8 @@
     "start": "nx run-many --target=serve --all",
     "init-db": "prisma generate && prisma db push && npx ts-node prisma/seed_script.ts",
     "serve-api": "nx run api:serve",
-    "oidc-migrate": "npx ts-node prisma/oidc_script.ts"
+    "oidc-migrate": "npx ts-node prisma/oidc_script.ts",
+    "build-api": "nx run api:build"
   },
   "private": true,
   "devDependencies": {
