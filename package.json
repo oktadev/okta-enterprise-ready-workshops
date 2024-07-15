@@ -12,8 +12,7 @@
     "start": "nx run-many --target=serve --all",
     "init-db": "prisma generate && prisma db push && npx ts-node prisma/seed_script.ts",
     "serve-api": "nx run api:serve",
-    "oidc-migrate": "npx ts-node prisma/oidc_script.ts",
-    "build-api": "nx run api:build"
+    "oidc-migrate": "npx ts-node prisma/oidc_script.ts"
   },
   "private": true,
   "devDependencies": {
@@ -78,5 +77,11 @@
     "react-dom": "18.2.0",
     "react-router-dom": "6.8.1",
     "tslib": "^2.3.0"
+  },
+  "optionalDependencies": {
+    "@nx/nx-darwin-arm64": "17.3.2",
+    "@nx/nx-darwin-x64": "17.3.2",
+    "@nx/nx-linux-x64-gnu": "17.3.2",
+    "@nx/nx-win32-x64-msvc": "17.3.2"
   }
 }
