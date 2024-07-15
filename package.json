@@ -73,5 +73,11 @@
     "react-dom": "18.2.0",
     "react-router-dom": "6.8.1",
     "tslib": "^2.3.0"
+  },
+  "optionalDependencies": {
+    "@nx/nx-darwin-arm64": "17.3.2",
+    "@nx/nx-darwin-x64": "17.3.2",
+    "@nx/nx-linux-x64-gnu": "17.3.2",
+    "@nx/nx-win32-x64-msvc": "17.3.2"
   }
 }
