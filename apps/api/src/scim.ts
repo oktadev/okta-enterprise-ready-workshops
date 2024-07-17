@@ -1,3 +1,4 @@
+import { characteristicsRoute, resourceTypesRoute, rolesRoute, schemasRoute } from './entitlements';
 import { Router } from 'express';
 export const scimRoute = Router();
 import express from 'express';
@@ -29,6 +30,7 @@ interface IUserSchema {
   active?: boolean;
   detail?: string;
   status?: number;
+  roles?: { value: string, display: string }[];
 }
 
 const defaultUserSchema: IUserSchema = {
@@ -104,7 +106,13 @@ scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
           email,
           password,
           externalId,
-          active
+          active,
+          roles: {
+            connect: newUser.roles?.map(role=> ({id: parseInt(role.value)})) || []
+          }
+        },
+        include: {
+          roles: true
         }
       });
   
@@ -124,7 +132,8 @@ scimRoute.post('/Users', passport.authenticate('bearer'), async (req, res) => {
         }],
         displayName: name,
         externalId: user.externalId, 
-        active: user.active 
+        active: user.active, 
+        roles: user.roles.map(role => ({display: role.name, value: role.id.toString()}))
       };
     }
   
@@ -200,7 +209,8 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
           email: true,
           name: true,
           externalId: true,
-          active: true 
+          active: true, 
+          roles: true
         },
         where
       });
@@ -223,7 +233,8 @@ scimRoute.get('/Users', passport.authenticate('bearer'), async (req, res) => {
             }],
             displayName: user.name,
             externalId: user.externalId, 
-            active: user.active
+            active: user.active,
+            roles: user.roles.map(role => ({display: role.name, value: role.id.toString()}))
         }
       });
     }
@@ -248,6 +259,7 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
         name: true,
         externalId: true, 
         active: true, 
+        roles: true
       }, 
       where: {
         id,
@@ -278,7 +290,8 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
         }],
         displayName: name,
         externalId: user.externalId, 
-        active: user.active
+        active: user.active,
+        roles: user.roles.map(role => ({display: role.name, value: role.id.toString()}))
       } satisfies IUserSchema;
     } else {
       httpStatus = 404;
@@ -311,15 +324,21 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
   
      if (userCount === 1) {
       const updatedUserRequest: IUserSchema = req.body;
-      const { name, emails } = updatedUserRequest; 
+      const { name, emails, roles } = updatedUserRequest; 
 
       const updatedUser = await prisma.user.update({
        data: {
          email: emails.find(email => email.primary).value,
-         name: `${name.givenName} ${name.familyName}` 
+         name: `${name.givenName} ${name.familyName}`,
+         roles: {
+          set: roles?.map(role => ({id: parseInt(role.value)})) || []
+         }
        },
        where : {
          id 
+       },
+       include: {
+        roles: true
        }
       });
       
@@ -340,7 +359,8 @@ scimRoute.get('/Users/:userId', passport.authenticate('bearer'), async ( req, re
         }],
         displayName: updatedUser.name,
         externalId: updatedUser.externalId, 
-        active: updatedUser.active
+        active: updatedUser.active,
+        roles: updatedUser.roles?.map(role => ({display: role.name, value: role.id.toString()}))
       } satisfies IUserSchema;
      } else if (userCount === 0) {
       httpStatus = 404;
@@ -388,3 +408,8 @@ scimRoute.patch('/Users/:userId', passport.authenticate('bearer'), async (req, r
   
      res.sendStatus(204);
    });   
+
+scimRoute.use('/Roles', rolesRoute);
+scimRoute.use('/ResourceTypes', resourceTypesRoute);
+scimRoute.use('/Schemas', schemasRoute);
+scimRoute.use('/Characteristics', characteristicsRoute);
