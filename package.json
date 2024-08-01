@@ -76,6 +76,20 @@
     "@nx/nx-darwin-arm64": "17.3.2",
     "@nx/nx-darwin-x64": "17.3.2",
     "@nx/nx-linux-x64-gnu": "17.3.2",
-    "@nx/nx-win32-x64-msvc": "17.3.2"
+    "@nx/nx-win32-x64-msvc": "17.3.2",
+    "@rollup/rollup-android-arm-eabi": "4.13.0",
+    "@rollup/rollup-android-arm64": "4.13.0",
+    "@rollup/rollup-darwin-arm64": "4.13.0",
+    "@rollup/rollup-darwin-x64": "4.13.0",
+    "@rollup/rollup-linux-arm-gnueabihf": "4.13.0",
+    "@rollup/rollup-linux-arm64-gnu": "4.13.0",
+    "@rollup/rollup-linux-arm64-musl": "4.13.0",
+    "@rollup/rollup-linux-riscv64-gnu": "4.13.0",
+    "@rollup/rollup-linux-x64-gnu": "4.13.0",
+    "@rollup/rollup-linux-x64-musl": "4.13.0",
+    "@rollup/rollup-win32-arm64-msvc": "4.13.0",
+    "@rollup/rollup-win32-ia32-msvc": "4.13.0",
+    "@rollup/rollup-win32-x64-msvc": "4.13.0",
+    "fsevents": "~2.3.2"
   }
 }
