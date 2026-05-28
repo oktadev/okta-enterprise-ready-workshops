@@ -95,10 +95,5 @@
     "@rollup/rollup-win32-ia32-msvc": "4.13.0",
     "@rollup/rollup-win32-x64-msvc": "4.13.0",
     "fsevents": "~2.3.2"
-  },
-  "overrides": {
-    "js-yaml": "4.1.0",
-    "argparse": "2.0.1",
-    "chokidar": "3.6.0"
   }
 }
