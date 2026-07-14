@@ -23,9 +23,9 @@ app.use(session({
   saveUninitialized: false,
   secret: 'top secret',
   cookie: {
-    http: false,
+    httpOnly: false,
     sameSite: 'lax'
-  },
+  }
   store
 }));
 app.use(passport.initialize());
