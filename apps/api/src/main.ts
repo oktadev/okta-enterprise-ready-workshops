@@ -283,7 +283,7 @@ const tokenValidator = async function (req, res, next) {
     req.org = org;
     next();
   } catch (err) {
-    console.log;
+    console.error(err);
     return res.sendStatus(401);
   }
 };
