@@ -263,8 +263,10 @@ const tokenValidator = async function (req, res, next) {
   if (!authHeaders) {
     return res.sendStatus(401);
   }
-  const parts = authHeaders.split(' ');
-  const jwt = parts[1];
+  const [scheme, jwt] = authHeaders.split(' ');
+  if (scheme !== 'Bearer' || !jwt) {
+    return res.sendStatus(401);
+  }
   const expectedAud =
     'https://{base-URL-provided-by-local-tunnel}/global-token-revocation';
   try {

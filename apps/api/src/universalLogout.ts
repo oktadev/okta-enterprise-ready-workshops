@@ -14,8 +14,11 @@ universalLogoutRoute.post('/global-token-revocation', async (req, res) => {
     return res.status(400);
   }
   // Find the user by email associated with the org id from the validated signed JWT
-  const domainOrg = req['org']
-  const newRequest:IRequestSchema = req.body;
+  const domainOrg = req['org'];
+  if (!domainOrg?.id) {
+    return res.sendStatus(401);
+  }
+  const newRequest: IRequestSchema = req.body;
   const { email } = newRequest.sub_id;
   const user = await prisma.user.findFirst({
     where: {
